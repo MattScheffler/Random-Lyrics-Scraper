@@ -22,7 +22,7 @@
     and lxml for parsing the HTML
 '''
 from bs4 import BeautifulSoup
-import requests
+import requests, codecs
 # Test with AstroPage
 '''
 web_data = requests.get("https://astropage.neocities.org").text
@@ -31,9 +31,10 @@ web_soup = BeautifulSoup(web_data, "lxml")
 print(web_soup.prettify())
 '''
 ### vlw_ will be for "Vocaloid Lyrics Wiki" ###
-vlw_random_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/May_I_Know_U").text
+vlw_random_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/ゴキブリの味_(Gokiburi_no_Aji)").text
 #vlw_random_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/Special:Random").text
 vlw_soup = BeautifulSoup(vlw_random_song, "lxml")
+
 if ("(disambiguation)" in vlw_soup.title.text):
     print("Disambiguation page found")
     print(vlw_soup.title.text)
@@ -55,14 +56,18 @@ else:
         print(f"Producer: {singers[len(singers)-1]}")
         print("Link:",vlw_soup.find("link", rel="canonical").get("href"))
         try:
-##            lyrics_table = vlw_soup.find("table", style = "width:100%")
-##            for lyric in lyrics_table.find_all("td").stripped_strings:
-##                print(lyric.text)
-##            print(vlw_soup.find("table", style = "width:100%").text)
-            for lyric in vlw_soup.find("table", style = "width:100%").strings:
-                print(lyric)
+            #print(vlw_soup.find("table", style = "width:100%").text)
+            skip_line = ["Japanese", "Romaji", "English"]
+            for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
+                if (lyric in skip_line):
+                    pass
+                else:
+                    print(lyric)
         except AttributeError:
             print(vlw_soup.find("div", class_ = "poem").text)
-    except:
-        print("Page error, try again.")
+    except Exception as e:
+        print(e)
 
+##with codecs.open("Lyrics_Test_File_Stripped.txt","w", encoding = "utf-8") as f:
+##    for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
+##        f.write(lyric)
