@@ -22,7 +22,7 @@
     and lxml for parsing the HTML
 '''
 from bs4 import BeautifulSoup
-import requests, codecs
+import requests, codecs, random
 # Test with AstroPage
 '''
 web_data = requests.get("https://astropage.neocities.org").text
@@ -83,4 +83,34 @@ def vlw_song_get():
     ##    for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
     ##        f.write(lyric)
 
-vlw_song_get()
+def mw_song_get():
+    ### mw will be for "Miku Wiki" ###
+    ''' Pages have address of "https://w.atwiki.jp/hmiku/pages/NUMBER.html"
+        There seems to be ~39,800 pages
+        Songs start at page 14
+    '''
+    page_number = random.choice(range(14, 39800))
+    song_page = "https://w.atwiki.jp/hmiku/pages/" + str(page_number) + ".html"
+    try:
+        mw_song = requests.get(song_page).text
+        mw_soup = BeautifulSoup(mw_song, "lxml")
+        title_format = mw_soup.title.text.find(" - 初音ミク Wiki")
+        if (mw_soup.title.text == "エラー - 初音ミク Wiki - アットウィキ"):
+            print("No page found, try again.")
+        else:
+            print("Link:", song_page)
+            print("Title:", mw_soup.title.text[:title_format])
+            # lyrics, composition, arrangement, singer(s)
+            start_word = "作詞："
+            end_word = "曲紹介"
+            start = mw_soup.text.find("作詞：")
+            end = mw_soup.text.find("曲紹介")
+            print(mw_soup.text[start:end].strip())
+        
+        
+    except Exception as e:
+        print(e)
+
+
+#vlw_song_get()
+mw_song_get()
