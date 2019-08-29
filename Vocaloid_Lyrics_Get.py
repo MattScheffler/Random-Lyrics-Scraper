@@ -22,7 +22,7 @@
     and lxml for parsing the HTML
 '''
 from bs4 import BeautifulSoup
-import requests, codecs, random
+import requests, codecs, random, sys
 # Test with AstroPage
 '''
 web_data = requests.get("https://astropage.neocities.org").text
@@ -91,6 +91,8 @@ def mw_song_get():
     '''
     page_number = random.choice(range(14, 39800))
     song_page = "https://w.atwiki.jp/hmiku/pages/" + str(page_number) + ".html"
+    '''Test page for a producer'''
+    #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/11860.html"
     try:
         mw_song = requests.get(song_page).text
         mw_soup = BeautifulSoup(mw_song, "lxml")
@@ -100,17 +102,56 @@ def mw_song_get():
         else:
             print("Link:", song_page)
             print("Title:", mw_soup.title.text[:title_format])
-            # lyrics, composition, arrangement, singer(s)
-            start_word = "作詞："
-            end_word = "曲紹介"
-            start = mw_soup.text.find("作詞：")
-            end = mw_soup.text.find("曲紹介")
-            print(mw_soup.text[start:end].strip())
-        
-        
+            
+            # get lyrics, composition, arrangement, and singer(s)
+            song_info_start = mw_soup.text.find("作詞：")
+            song_info_end = mw_soup.text.find("曲紹介")
+            # change endpoint when there is no song introduction
+            if (song_info_end == -1):
+                song_info_end = mw_soup.text.find("歌詞")
+            print(mw_soup.text[song_info_start:song_info_end].strip())
+            print()
+
+            # Optional song introduction info
+            song_intro_start = mw_soup.text.find("曲紹介")
+            song_intro_end = mw_soup.text.find("歌詞")
+            if (song_intro_start == -1):
+                pass                        
+            else:
+                print(mw_soup.text[song_intro_start:song_intro_end].strip())
+                print()
+            
+            # Get section with lyrics
+            mw_strings = [s for s in mw_soup.stripped_strings]
+            for s in mw_strings:
+                if s == "歌詞":
+                    lyrics_start = mw_strings.index(s)
+                elif s == "コメント":
+                    lyrics_end = mw_strings.index(s)
+                else:
+                    pass
+            for lyric in mw_strings[lyrics_start:lyrics_end]:
+                if (lyric == "代表的なPV紹介"):
+                    pass
+                else:
+                    print(lyric)
+                
     except Exception as e:
         print(e)
 
 
+def main(site_choice):
+    if (site_choice == "vlw"):
+        vlw_song_get()
+    elif (site_choice == "mw"):
+        mw_song_get()
+    else:
+        print("Use 'vlw' or 'mw'")
+
+##if (__name__ == "__main__"):
+##    # Will need special fonts for displaying Japanese in cmd
+##    main(sys.argv[1])
+
 #vlw_song_get()
 mw_song_get()
+
