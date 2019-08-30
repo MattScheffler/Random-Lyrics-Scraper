@@ -16,20 +16,8 @@
 # Can get all lyrics with .find("table", style = "width:100%")
 # Random song page: "https://vocaloidlyrics.fandom.com/wiki/Special:Random"
 
-'''
-    Use beautifulsoup for scraping,
-    requests for getting website data,
-    and lxml for parsing the HTML
-'''
 from bs4 import BeautifulSoup
-import requests, codecs, random, sys
-# Test with AstroPage
-'''
-web_data = requests.get("https://astropage.neocities.org").text
-web_soup = BeautifulSoup(web_data, "lxml")
-
-print(web_soup.prettify())
-'''
+import requests, codecs, random, sys, time
 
 def vlw_song_get():
     ### vlw_ will be for "Vocaloid Lyrics Wiki" ###
@@ -89,69 +77,98 @@ def mw_song_get():
         There seems to be ~39,800 pages
         Songs start at page 14
     '''
-    page_number = random.choice(range(14, 39800))
-    song_page = "https://w.atwiki.jp/hmiku/pages/" + str(page_number) + ".html"
-    '''Test page for a producer'''
-    #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/11860.html"
     try:
-        mw_song = requests.get(song_page).text
-        mw_soup = BeautifulSoup(mw_song, "lxml")
-        title_format = mw_soup.title.text.find(" - 初音ミク Wiki")
-        if (mw_soup.title.text == "エラー - 初音ミク Wiki - アットウィキ"):
-            print("No page found, try again.")
-        else:
-            print("Link:", song_page)
-            print("Title:", mw_soup.title.text[:title_format])
-            
-            # get lyrics, composition, arrangement, and singer(s)
-            song_info_start = mw_soup.text.find("作詞：")
-            song_info_end = mw_soup.text.find("曲紹介")
-            # change endpoint when there is no song introduction
-            if (song_info_end == -1):
-                song_info_end = mw_soup.text.find("歌詞")
-            print(mw_soup.text[song_info_start:song_info_end].strip())
-            print()
+        song_found = False
+        while not (song_found):
+            '''Test page for a producer'''
+            #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/11860.html"
+            '''Test page for a CD page'''
+            #song_page = "https://w.atwiki.jp/hmiku/pages/9146.html"
+            '''Test page with furigana in lyrics'''
+            #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/39235.html"
 
-            # Optional song introduction info
-            song_intro_start = mw_soup.text.find("曲紹介")
-            song_intro_end = mw_soup.text.find("歌詞")
-            if (song_intro_start == -1):
-                pass                        
+            # Try to find a song page
+            page_number = str(random.choice(range(14, 39800)))
+            song_page = "https://w.atwiki.jp/hmiku/pages/" + page_number + ".html"
+            mw_song = requests.get(song_page).text
+            mw_soup = BeautifulSoup(mw_song, "lxml")
+            if (mw_soup.title.text == "エラー - 初音ミク Wiki - アットウィキ"):
+                print("Song page not found, trying again...")
+                time.sleep(5)
+            elif (mw_soup.find("h3", text = "CD紹介") != None):
+                # Skip pages for CDs
+                print("CD page found, retrying for song page...")
+                time.sleep(5)
             else:
-                print(mw_soup.text[song_intro_start:song_intro_end].strip())
-                print()
-            
-            # Get section with lyrics
-            mw_strings = [s for s in mw_soup.stripped_strings]
-            for s in mw_strings:
-                if s == "歌詞":
-                    lyrics_start = mw_strings.index(s)
-                elif s == "コメント":
-                    lyrics_end = mw_strings.index(s)
-                else:
-                    pass
-            for lyric in mw_strings[lyrics_start:lyrics_end]:
-                if (lyric == "代表的なPV紹介"):
-                    pass
-                else:
-                    print(lyric)
+                song_found = True
+        title_format = mw_soup.title.text.find(" - 初音ミク Wiki")
+        print("Link:", song_page)
+        print("Title:", mw_soup.title.text[:title_format])
+        
+        # get lyrics, composition, arrangement, and singer(s)
+        song_info_start = mw_soup.text.find("作詞：")
+        song_info_end = mw_soup.text.find("曲紹介")
+        # change endpoint when there is no song introduction
+        if (song_info_end == -1):
+            song_info_end = mw_soup.text.find("歌詞")
+        print(mw_soup.text[song_info_start:song_info_end].strip())
+        print()
+
+        # Optional song introduction info
+        song_intro_start = mw_soup.text.find("曲紹介")
+        if not (song_intro_start == -1):
+            song_intro_end = mw_soup.text.find("歌詞")
+            print(mw_soup.text[song_intro_start:song_intro_end].strip())
+            print()
+        
+        # Get section with lyrics
+        mw_strings = [s for s in mw_soup.stripped_strings]
+        for s in mw_strings:
+            if s == "歌詞":
+                lyrics_start = mw_strings.index(s)
+            elif s == "コメント":
+                lyrics_end = mw_strings.index(s)
+            else:
+                pass
+        for lyric in mw_strings[lyrics_start:lyrics_end]:
+            if (lyric == "代表的なPV紹介"):
+                pass
+            else:
+                print(lyric)
                 
     except Exception as e:
         print(e)
 
-
+def main_menu():
+    print("Enter 'vlw' to get a random song from the Vocaloid Lyrics Wiki.")
+    print("Enter 'mw' to get a random song from the Hatsune Miku Wiki.")
+    print("Enter 'quit' to quit the program.")
+    
 def main(site_choice):
-    if (site_choice == "vlw"):
+    if (str(site_choice) == "vlw"):
         vlw_song_get()
-    elif (site_choice == "mw"):
+    elif (str(site_choice) == "mw"):
         mw_song_get()
+    elif (str(site_choice) == 'quit'):
+        pass
     else:
         print("Use 'vlw' or 'mw'")
 
-##if (__name__ == "__main__"):
-##    # Will need special fonts for displaying Japanese in cmd
-##    main(sys.argv[1])
+if (__name__ == "__main__"):
+    # Will need special fonts for displaying Japanese in cmd
+    #main(sys.argv[1])
+    site_select = str()
+    while (site_select != "quit"):
+        main_menu()
+        site_select = input("Selection: ")
+        print()
+        main(site_select)
+        print()
+    print("Ending program")
+    end = input("Press 'Enter' key to exit...")
+    
 
 #vlw_song_get()
-mw_song_get()
+#mw_song_get()
+
 
