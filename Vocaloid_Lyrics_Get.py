@@ -8,26 +8,51 @@
 from bs4 import BeautifulSoup
 import requests, codecs, random, sys, time
 
+'''Gets a page with requests, handles for connection issues'''
+def page_get(web_page):
+    timeout_count = 0
+    timeout_check = False
+    while not(timeout_check):
+        try:
+            song_page = requests.get(web_page, timeout = 5)
+            timeout_check = True
+        except Exception:
+            if (timeout_count >= 3):
+                return None
+            timeout_count += 1
+            time.sleep(3)
+    return song_page
+
+
 def vlw_song_get():
     ### vlw_ will be for "Vocaloid Lyrics Wiki" ###
+    
     '''Song with Japanese, Romaji, and English'''
-    #vlw_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/ゴキブリの味_(Gokiburi_no_Aji)").text
+    #song_page = "https://vocaloidlyrics.fandom.com/wiki/ゴキブリの味_(Gokiburi_no_Aji)"
     '''Song with Japanese and Romaji only'''
-    #vlw_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/闇屋の娘は眼で殺す_(Yamiya_no_Musume_wa_Me_de_Korosu)").text
+    #song_page = "https://vocaloidlyrics.fandom.com/wiki/闇屋の娘は眼で殺す_(Yamiya_no_Musume_wa_Me_de_Korosu)"
     '''Song with only one language'''
-    #vlw_song = requests.get("https://vocaloidlyrics.fandom.com/wiki/I%27m_Breathless").text
-
+    #song_page = "https://vocaloidlyrics.fandom.com/wiki/I%27m_Breathless"
+    '''Song with furigana'''
+    #song_page = "https://vocaloidlyrics.fandom.com/wiki/Replicant%27s_Blues"
+    
     song_found = False
     while not (song_found):
         song_page = "https://vocaloidlyrics.fandom.com/wiki/Special:Random"
-        vlw_song = requests.get(song_page).text
-        vlw_soup = BeautifulSoup(vlw_song, "lxml")
-        # First handle if an individual song's page isn't selected
+        vlw_song = page_get(song_page)
+        
+        if (vlw_song == None):
+            return "Timeout limit reached, check for connection issues."
+
+        vlw_soup = BeautifulSoup(vlw_song.text, "lxml")
+        
+        # Handle for if an individual song's page isn't selected
         if ("(disambiguation)" in vlw_soup.title.text):
             print("Disambiguation page found")
             print(vlw_soup.title.text)
             print("Link:",vlw_soup.find("link", rel="canonical").get("href"))
             print("Trying again for a song page...")
+            print()
             time.sleep(5)
         else:
             song_found = True
@@ -35,6 +60,10 @@ def vlw_song_get():
         title_format = vlw_soup.title.text.find("|")
 
         print("Title:", vlw_soup.title.text[:title_format].strip())
+
+        print("Original Upload Date: ")
+        print(vlw_soup.find("b", text = "Original Upload Date")
+              .next_element.next_element.next_element.next_element.text.strip())
         
         print("Producer(s): ")
         print(vlw_soup.find("b", text = "Producer(s)")
@@ -50,10 +79,9 @@ def vlw_song_get():
             #print(vlw_soup.find("table", style = "width:100%").text)
             skip_line = ["Japanese", "Romaji", "English", "Official"]
             for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
-                if (lyric in skip_line):
-                    pass
-                else:
+                if not(lyric in skip_line):
                     print(lyric)
+
         except AttributeError:
             '''For when there is only one language. No further formatting needed.'''
             print(vlw_soup.find("div", class_ = "poem").text)
@@ -65,12 +93,14 @@ def vlw_song_get():
     ##    for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
     ##        f.write(lyric)
 
+
 def mw_song_get():
     ### mw will be for "Miku Wiki" ###
     ''' Pages have address of "https://w.atwiki.jp/hmiku/pages/NUMBER.html"
         There seems to be ~39,800 pages
         Songs start at page 14
     '''
+    
     try:
         song_found = False
         while not (song_found):
@@ -79,13 +109,18 @@ def mw_song_get():
             '''Test page for a CD page'''
             #song_page = "https://w.atwiki.jp/hmiku/pages/9146.html"
             '''Test page with furigana in lyrics'''
-            #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/39235.html"
+            #song_page = "https://w.atwiki.jp/hmiku/pages/39235.html"
 
             # Try to find a song page
             page_number = str(random.choice(range(14, 39800)))
             song_page = "https://w.atwiki.jp/hmiku/pages/" + page_number + ".html"
-            mw_song = requests.get(song_page).text
-            mw_soup = BeautifulSoup(mw_song, "lxml")
+            mw_song = page_get(song_page)
+        
+            if (mw_song == None):
+                return "Timeout limit reached, check for connection issues."
+            
+            #mw_song = requests.get(song_page)
+            mw_soup = BeautifulSoup(mw_song.text, "lxml")
             if (mw_soup.title.text == "エラー - 初音ミク Wiki - アットウィキ"):
                 print("Song page not found, trying again...")
                 time.sleep(5)
@@ -124,19 +159,20 @@ def mw_song_get():
                 lyrics_end = mw_strings.index(s)
             else:
                 pass
+        skip_line = ["代表的なPV紹介"]
         for lyric in mw_strings[lyrics_start:lyrics_end]:
-            if (lyric == "代表的なPV紹介"):
-                pass
-            else:
+            if not(lyric in skip_line):
                 print(lyric)
                 
     except Exception as e:
         print(e)
 
+
 def main_menu():
     print("Enter 'vlw' to get a random song from the Vocaloid Lyrics Wiki.")
     print("Enter 'mw' to get a random song from the Hatsune Miku Wiki.")
     print("Enter 'quit' to quit the program.")
+
     
 def main(site_choice):
     if (str(site_choice) == "vlw"):
@@ -147,6 +183,7 @@ def main(site_choice):
         pass
     else:
         print("Use 'vlw' or 'mw'")
+
 
 if (__name__ == "__main__"):
     # Will need special fonts for displaying Japanese in cmd
@@ -163,9 +200,12 @@ if (__name__ == "__main__"):
     
 
 '''To do list'''
+# mw: Get upload date if availabe
 # mw: Display lyrics with furigana properly
 # mw: Keep spaces in lyrics
 # mw: Handle when a producer's page is selected
+# mw: Handle when Piapro link before lyrics (https://w.atwiki.jp/hmiku/pages/31592.html)
 
 # vlw: Format singers/producers better
 # vlw: Format lyrics somehow
+# vlw: Maybe get translator name if available
