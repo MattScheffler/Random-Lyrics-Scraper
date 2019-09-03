@@ -105,7 +105,7 @@ def mw_song_get():
         song_found = False
         while not (song_found):
             '''Test page for a producer'''
-            #song_page = "view-source:https://w.atwiki.jp/hmiku/pages/11860.html"
+            #song_page = "https://w.atwiki.jp/hmiku/pages/11860.html"
             '''Test page for a CD page'''
             #song_page = "https://w.atwiki.jp/hmiku/pages/9146.html"
             '''Test page with furigana in lyrics'''
@@ -119,7 +119,6 @@ def mw_song_get():
             if (mw_song == None):
                 return "Timeout limit reached, check for connection issues."
             
-            #mw_song = requests.get(song_page)
             mw_soup = BeautifulSoup(mw_song.text, "lxml")
             if (mw_soup.title.text == "エラー - 初音ミク Wiki - アットウィキ"):
                 print("Song page not found, trying again...")
@@ -128,8 +127,13 @@ def mw_song_get():
                 # Skip pages for CDs
                 print("CD page found, retrying for song page...")
                 time.sleep(5)
+            elif (mw_soup.find("h3", text = "特徴") != None):
+                # Skip pages for Producers
+                print("Producer page found, retrying for song page...")
+                time.sleep(5)
             else:
                 song_found = True
+                print()
         title_format = mw_soup.title.text.find(" - 初音ミク Wiki")
         print("Link:", song_page)
         print("Title:", mw_soup.title.text[:title_format])
@@ -159,9 +163,30 @@ def mw_song_get():
                 lyrics_end = mw_strings.index(s)
             else:
                 pass
-        skip_line = ["代表的なPV紹介"]
-        for lyric in mw_strings[lyrics_start:lyrics_end]:
-            if not(lyric in skip_line):
+    
+        skip_line = ["代表的なPV紹介",")"]
+        if (mw_soup.find("ruby") == None):
+            for lyric in mw_strings[lyrics_start:lyrics_end]:
+                if not(lyric in skip_line):
+                    print(lyric)
+        else:
+            # Extra formatting for if ruby is used for furigana
+            lyrics = [line for line in mw_strings[lyrics_start:lyrics_end]
+                      if line not in skip_line]
+            while("(" in lyrics):
+                for index, lyric in enumerate(lyrics):
+                    if lyric == "(":
+                        lyrics[index - 2] = lyrics[index - 2] \
+                                            + lyrics[index - 1] \
+                                            + lyrics[index + 2]
+
+                        lyrics.remove(lyrics[index + 2])
+                        lyrics.remove(lyrics[index + 1])
+                        lyrics.remove(lyrics[index])
+                        lyrics.remove(lyrics[index - 1])
+                        break
+
+            for lyric in lyrics:
                 print(lyric)
                 
     except Exception as e:
@@ -200,10 +225,9 @@ if (__name__ == "__main__"):
     
 
 '''To do list'''
-# mw: Get upload date if availabe
-# mw: Display lyrics with furigana properly
-# mw: Keep spaces in lyrics
-# mw: Handle when a producer's page is selected
+# Possible feature add: Collect all links from a session and save to file.
+
+# mw: Get upload date if availabe (need to use nico ext link above song info)
 # mw: Handle when Piapro link before lyrics (https://w.atwiki.jp/hmiku/pages/31592.html)
 
 # vlw: Format singers/producers better
