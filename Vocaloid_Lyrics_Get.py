@@ -1,9 +1,9 @@
-# Project Idea:
-# Go to a random song page on the Miku wiki (https://www5.atwiki.jp/hmiku/tag/曲)
-# Or the Vocaloid Lyrics Wiki (https://vocaloidlyrics.fandom.com/wiki/Vocaloid_Lyrics_Wiki)
-# Get the song name, lyrics, producer, singer, and page link
-# Display the data in a window (use tkinter?)
-# Have the ability to repeat as much as you want
+# Get a random song from the Vocaloid wikis below:
+# Hatsune Miku wiki (Japanese only):
+# https://www5.atwiki.jp/hmiku/
+# Vocaloid Lyrics Wiki (May have English translations):
+# https://vocaloidlyrics.fandom.com/wiki/Vocaloid_Lyrics_Wiki
+
 
 from bs4 import BeautifulSoup
 import requests, codecs, random, sys, time
@@ -110,6 +110,10 @@ def mw_song_get():
             #song_page = "https://w.atwiki.jp/hmiku/pages/9146.html"
             '''Test page with furigana in lyrics'''
             #song_page = "https://w.atwiki.jp/hmiku/pages/39235.html"
+            '''blog link'''
+            #song_page = "https://w.atwiki.jp/hmiku/pages/39849.html"
+            '''piapro link'''
+            #song_page = "https://w.atwiki.jp/hmiku/pages/35106.html"
 
             # Try to find a song page
             page_number = str(random.choice(range(14, 39800)))
@@ -137,6 +141,12 @@ def mw_song_get():
         title_format = mw_soup.title.text.find(" - 初音ミク Wiki")
         print("Link:", song_page)
         print("Title:", mw_soup.title.text[:title_format])
+
+        # Remove any lyric source links before lyrics section
+        try:
+            mw_soup.find("a", target = "_blank", rel = "nofollow").parent.decompose()
+        except AttributeError:
+            pass
         
         # get lyrics, composition, arrangement, and singer(s)
         song_info_start = mw_soup.text.find("作詞：")
@@ -163,8 +173,8 @@ def mw_song_get():
                 lyrics_end = mw_strings.index(s)
             else:
                 pass
-    
-        skip_line = ["代表的なPV紹介",")"]
+        
+        skip_line = ["代表的なPV紹介", ")"]
         if (mw_soup.find("ruby") == None):
             for lyric in mw_strings[lyrics_start:lyrics_end]:
                 if not(lyric in skip_line):
@@ -228,7 +238,6 @@ if (__name__ == "__main__"):
 # Possible feature add: Collect all links from a session and save to file.
 
 # mw: Get upload date if availabe (need to use nico ext link above song info)
-# mw: Handle when Piapro link before lyrics (https://w.atwiki.jp/hmiku/pages/31592.html)
 
 # vlw: Format singers/producers better
 # vlw: Format lyrics somehow
