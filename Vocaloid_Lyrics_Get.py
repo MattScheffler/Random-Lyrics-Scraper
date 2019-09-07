@@ -24,17 +24,23 @@ def page_get(web_page):
     return song_page
 
 
+'''Used for printing singers and producers in vlw_song_get'''
+def print_a_text(tr_tag):
+    if (tr_tag.a == None):
+        print(tr_tag.text.strip())
+        return
+    
+    a_tags = tr_tag.find_all("a")
+    for index, item in enumerate(a_tags, start = 1):
+        if (index == len(a_tags)):
+            print(item.text)
+        else:
+            print(item.text, end = ", ")
+    return
+
+
 def vlw_song_get():
     ### vlw_ will be for "Vocaloid Lyrics Wiki" ###
-    
-    '''Song with Japanese, Romaji, and English'''
-    #song_page = "https://vocaloidlyrics.fandom.com/wiki/ゴキブリの味_(Gokiburi_no_Aji)"
-    '''Song with Japanese and Romaji only'''
-    #song_page = "https://vocaloidlyrics.fandom.com/wiki/闇屋の娘は眼で殺す_(Yamiya_no_Musume_wa_Me_de_Korosu)"
-    '''Song with only one language'''
-    #song_page = "https://vocaloidlyrics.fandom.com/wiki/I%27m_Breathless"
-    '''Song with furigana'''
-    #song_page = "https://vocaloidlyrics.fandom.com/wiki/Replicant%27s_Blues"
     
     song_found = False
     while not (song_found):
@@ -61,27 +67,32 @@ def vlw_song_get():
 
         print("Title:", vlw_soup.title.text[:title_format].strip())
 
-        print("Original Upload Date: ")
+        print("Original Upload Date: ", end = "")
         print(vlw_soup.find("b", text = "Original Upload Date")
               .next_element.next_element.next_element.next_element.text.strip())
+
+        print("Producers(s): ", end = "")
+        print_a_text(vlw_soup.find("b", text = "Producer(s)").parent\
+                     .parent.next_sibling.next_sibling)
+
+        print("Singer(s): ", end = "")
+        print_a_text(vlw_soup.find("b", text = "Singer").parent\
+                     .parent.next_sibling.next_sibling)
         
-        print("Producer(s): ")
-        print(vlw_soup.find("b", text = "Producer(s)")
-              .next_element.next_element.next_element.next_element.text.strip())
-
-        print("Singer(s):")
-        print(vlw_soup.find("b", text = "Singer")
-              .next_element.next_element.next_element.next_element.text.strip())
-
         print("Link:",vlw_soup.find("link", rel="canonical").get("href"))
         print()
+        
         try:
-            #print(vlw_soup.find("table", style = "width:100%").text)
+            for ruby in vlw_soup.find_all("ruby"):
+                ruby.replace_with(ruby.text)
+        except AttributeError:
+            pass
+        
+        try:
             skip_line = ["Japanese", "Romaji", "English", "Official"]
             for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
                 if not(lyric in skip_line):
                     print(lyric)
-
         except AttributeError:
             '''For when there is only one language. No further formatting needed.'''
             print(vlw_soup.find("div", class_ = "poem").text)
@@ -114,7 +125,7 @@ def mw_song_get():
             #song_page = "https://w.atwiki.jp/hmiku/pages/39849.html"
             '''piapro link'''
             #song_page = "https://w.atwiki.jp/hmiku/pages/35106.html"
-
+            
             # Try to find a song page
             page_number = str(random.choice(range(14, 39800)))
             song_page = "https://w.atwiki.jp/hmiku/pages/" + page_number + ".html"
