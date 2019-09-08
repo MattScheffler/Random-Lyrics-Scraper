@@ -4,9 +4,9 @@
 # Vocaloid Lyrics Wiki (May have English translations):
 # https://vocaloidlyrics.fandom.com/wiki/Vocaloid_Lyrics_Wiki
 
-
 from bs4 import BeautifulSoup
 import requests, codecs, random, sys, time
+
 
 '''Gets a page with requests, handles for connection issues'''
 def page_get(web_page):
@@ -96,6 +96,13 @@ def vlw_song_get():
         except AttributeError:
             '''For when there is only one language. No further formatting needed.'''
             print(vlw_soup.find("div", class_ = "poem").text)
+
+        # Get translator if available
+        for p_tag in vlw_soup.find_all("p"):
+            if (p_tag.text.find("English") != -1):
+                print()
+                print(p_tag.text.strip())
+
     except Exception as e:
         print(e)
 
@@ -115,17 +122,6 @@ def mw_song_get():
     try:
         song_found = False
         while not (song_found):
-            '''Test page for a producer'''
-            #song_page = "https://w.atwiki.jp/hmiku/pages/11860.html"
-            '''Test page for a CD page'''
-            #song_page = "https://w.atwiki.jp/hmiku/pages/9146.html"
-            '''Test page with furigana in lyrics'''
-            #song_page = "https://w.atwiki.jp/hmiku/pages/39235.html"
-            '''blog link'''
-            #song_page = "https://w.atwiki.jp/hmiku/pages/39849.html"
-            '''piapro link'''
-            #song_page = "https://w.atwiki.jp/hmiku/pages/35106.html"
-            
             # Try to find a song page
             page_number = str(random.choice(range(14, 39800)))
             song_page = "https://w.atwiki.jp/hmiku/pages/" + page_number + ".html"
@@ -185,7 +181,7 @@ def mw_song_get():
             else:
                 pass
         
-        skip_line = ["代表的なPV紹介", ")"]
+        skip_line = ["代表的なPV紹介", ")", "（動画より書き起こし）"]
         if (mw_soup.find("ruby") == None):
             for lyric in mw_strings[lyrics_start:lyrics_end]:
                 if not(lyric in skip_line):
@@ -247,9 +243,10 @@ if (__name__ == "__main__"):
 
 '''To do list'''
 # Possible feature add: Collect all links from a session and save to file.
-
 # mw: Get upload date if availabe (need to use nico ext link above song info)
+# mw: Found page with extra lyrics section that enumerates lyric lines
+# (https://w.atwiki.jp/hmiku/pages/23024.html)
+# May try to add a way to ignore sections like this, it seems rare though.
 
-# vlw: Format singers/producers better
-# vlw: Format lyrics somehow
-# vlw: Maybe get translator name if available
+# vlw: Format lyrics somehow? Seems too difficult to be worth it.
+
