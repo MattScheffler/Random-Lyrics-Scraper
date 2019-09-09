@@ -5,7 +5,7 @@
 # https://vocaloidlyrics.fandom.com/wiki/Vocaloid_Lyrics_Wiki
 
 from bs4 import BeautifulSoup
-import requests, codecs, random, sys, time
+import requests, random, time #, sys, codecs
 
 
 '''Gets a page with requests, handles for connection issues'''
@@ -174,10 +174,14 @@ def mw_song_get():
         # Get section with lyrics
         mw_strings = [s for s in mw_soup.stripped_strings]
         for s in mw_strings:
-            if s == "歌詞":
+            if (s == "歌詞"):
                 lyrics_start = mw_strings.index(s)
-            elif s == "コメント":
+            elif (s == "コメント"):
                 lyrics_end = mw_strings.index(s)
+                break
+            elif (s == "+"):
+                lyrics_end = mw_strings.index(s)
+                break
             else:
                 pass
         
@@ -227,26 +231,22 @@ def main(site_choice):
         print("Use 'vlw' or 'mw'")
 
 
-if (__name__ == "__main__"):
-    # Will need special fonts for displaying Japanese in cmd
-    #main(sys.argv[1])
-    site_select = str()
-    while (site_select != "quit"):
-        main_menu()
-        site_select = input("Selection: ")
-        print()
-        main(site_select)
-        print()
-    print("Ending program")
-    end = input("Press 'Enter' key to exit...")
-    
+'''~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'''
+# Will need special fonts for displaying Japanese in cmd
+#main(sys.argv[1])
+
+site_select = str()
+while (site_select != "quit"):
+    main_menu()
+    site_select = input("Selection: ")
+    print()
+    main(site_select)
+    print()
+print("Ending program")
+end = input("Press 'Enter' key to exit...")
+
 
 '''To do list'''
 # Possible feature add: Collect all links from a session and save to file.
+
 # mw: Get upload date if availabe (need to use nico ext link above song info)
-# mw: Found page with extra lyrics section that enumerates lyric lines
-# (https://w.atwiki.jp/hmiku/pages/23024.html)
-# May try to add a way to ignore sections like this, it seems rare though.
-
-# vlw: Format lyrics somehow? Seems too difficult to be worth it.
-
