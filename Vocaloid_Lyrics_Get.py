@@ -142,6 +142,10 @@ def mw_song_get():
                 # Skip pages for Producers
                 print("Producer page found, retrying for song page...")
                 time.sleep(5)
+            elif (mw_soup.title.text.find("/過去ログ") != -1):
+                # Skip pages for comment logs
+                print("Comments page found, retrying for song page...")
+                time.sleep(5)
             else:
                 song_found = True
                 print()
