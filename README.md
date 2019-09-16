@@ -1,4 +1,4 @@
-# Random-Lyrics-Scraper
+# Vocaloid-Lyrics-Scraper
 
 This will be a web scraping script to get a random song's lyrics and page info from two different vocaloid music websites.
 Hatsune Miku Wiki: https://w.atwiki.jp/hmiku/  
