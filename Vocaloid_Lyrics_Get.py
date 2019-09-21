@@ -1,14 +1,14 @@
 # Get a random song from the Vocaloid wikis below:
 # Hatsune Miku wiki (Japanese only):
 # https://www5.atwiki.jp/hmiku/
-# Vocaloid Lyrics Wiki (May have English translations):
+# Vocaloid Lyrics Wiki (may have English translations):
 # https://vocaloidlyrics.fandom.com/wiki/Vocaloid_Lyrics_Wiki
 
 from bs4 import BeautifulSoup
 import requests, random, time #, sys, codecs
 
 
-'''Gets a page with requests, handles for connection issues'''
+# Gets a page with requests, handles for connection issues
 def page_get(web_page):
     timeout_count = 0
     timeout_check = False
@@ -24,7 +24,7 @@ def page_get(web_page):
     return song_page
 
 
-'''Used for printing singers and producers in vlw_song_get'''
+# Prints singers and producers in vlw_song_get()
 def print_a_text(tr_tag):
     if (tr_tag.a == None):
         print(tr_tag.text.strip())
@@ -39,9 +39,8 @@ def print_a_text(tr_tag):
     return
 
 
+### vlw_ will be for "Vocaloid Lyrics Wiki" ###
 def vlw_song_get():
-    ### vlw_ will be for "Vocaloid Lyrics Wiki" ###
-    
     song_found = False
     while not (song_found):
         song_page = "https://vocaloidlyrics.fandom.com/wiki/Special:Random"
@@ -106,19 +105,14 @@ def vlw_song_get():
     except Exception as e:
         print(e)
 
-    '''Save lyrics to file for testing, may leave the option in the finished program.'''
-    ##with codecs.open("Lyrics_Test_File_Stripped.txt","w", encoding = "utf-8") as f:
-    ##    for lyric in vlw_soup.find("table", style = "width:100%").stripped_strings:
-    ##        f.write(lyric)
 
-
+### mw will be for "Miku Wiki" ###
 def mw_song_get():
-    ### mw will be for "Miku Wiki" ###
-    ''' Pages have address of "https://w.atwiki.jp/hmiku/pages/NUMBER.html"
-        There seems to be ~39,800 pages
+    '''
+        Pages have address of "https://w.atwiki.jp/hmiku/pages/NUMBER.html"
+        There seems to be ~39,800 pages so this is the upper bound of pages to try
         Songs start at page 14
     '''
-    
     try:
         song_found = False
         while not (song_found):
@@ -242,15 +236,11 @@ def main(site_choice):
 site_select = str()
 while (site_select != "quit"):
     main_menu()
-    site_select = input("Selection: ")
+    site_select = input("Selection: ").strip()
     print()
     main(site_select)
     print()
 print("Ending program")
 end = input("Press 'Enter' key to exit...")
 
-
-'''To do list'''
 # Possible feature add: Collect all links from a session and save to file.
-
-# mw: Get upload date if availabe (need to use nico ext link above song info)
